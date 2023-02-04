@@ -1,2 +1,1 @@
-# srv_dns
-DNS Server
+# DNS Server
