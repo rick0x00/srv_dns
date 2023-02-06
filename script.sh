@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-commandargs=$*
-
 # ============================================================ #
 # Created date: 05 fev 2023                                    #
 # Created by: Henrique Silva rick.0x00@gmail.com               #
@@ -12,6 +10,15 @@ commandargs=$*
 # Remote repository 2: https://gitlab.com/rick0x00/srv_dns     #
 # ============================================================ #
 
+################################################################################################
+# start set variables
+
+commandargs=$*
+version="1.0"
+logs_directory="/var/log/srv_dns/"
+backup_directory="/var/backup/srv_dns/"
+
+# end set variables
 ################################################################################################
 # start definition functions
 
@@ -28,7 +35,7 @@ function fullhelp() {
     echo "  command [OPTIONS] OBJECT ...";
     echo "";
     echo -e "\e[1;34mOPTIONS: \e[0m";
-    echo "  -os, --os <os>";
+    echo "  -os, --operational-system <os>";
     echo "      Operational System.";
     echo "      [default: debian] [possible values: debian]";
     echo "  -ct, --container-technology <container>"
@@ -51,6 +58,15 @@ function fullhelp() {
     echo "";
 }
 
+function show_version() {
+    echo "version: $version"
+}
+
+function show_change_directories() {
+    echo "logs:     $logs_directory"
+    echo "backups:  $backup_directory"
+}
+
 function readcliargs() {
     num_arg_errors=0
     while [ -n "$1" ]; do
@@ -62,7 +78,7 @@ function readcliargs() {
             exit 0;
         fi
         case $1 in
-            ( "-os"|"--os" )
+            ( "-os"|"--operational-system" )
                 if [ -n "$2" ] && [[ "$2" != -* ]]; then
                     case $2 in
                         ( [Dd]ebian | DEBIAN )
@@ -113,6 +129,22 @@ function readcliargs() {
                     echo 'error: dns software not defined'
                     num_arg_errors=$(($num_arg_errors+1));
                 fi
+                ;;
+            ( "-cd"|"--change-directories" )
+                show_change_directories
+                exit 0
+                ;;
+            ( "-v"|"--version" )
+                show_version
+                exit 0
+                ;;
+            ( "-h" )
+                shorthelp
+                exit 0
+                ;;
+            ( "-H"|"--help" )
+                fullhelp
+                exit 0
                 ;;
             ( * )
                 echo "error: unknown option: $1"
