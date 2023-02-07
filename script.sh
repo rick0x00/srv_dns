@@ -13,7 +13,7 @@
 ################################################################################################
 # start set variables
 
-commandargs=$*
+command_args=$*
 version="1.0"
 logs_directory="/var/log/srv_dns/"
 backup_directory="/var/backup/srv_dns/"
@@ -22,11 +22,11 @@ backup_directory="/var/backup/srv_dns/"
 ################################################################################################
 # start definition functions
 
-function shorthelp() {
+function short_help() {
     echo "$(echo $0): usage: command [-os <os>] [-ct <container>] [--help :show Full help] ...";
 }
 
-function fullhelp() {
+function full_help() {
     echo "";
     echo -e "\e[1;34mDESCRIPTION: \e[0m";
     echo "Script to help in the creation of DNS Servers.";
@@ -67,14 +67,14 @@ function show_change_directories() {
     echo "backups:  $backup_directory"
 }
 
-function readcliargs() {
+function read_cli_args() {
     num_arg_errors=0
     while [ -n "$1" ]; do
         if [ "$1" == "-h" ]; then
-            shorthelp;
+            short_help;
             exit 0;
         elif [ "$1" == "-H" ] || [ "$1" == "--help" ]; then
-            fullhelp;
+            full_help;
             exit 0;
         fi
         case $1 in
@@ -139,11 +139,11 @@ function readcliargs() {
                 exit 0
                 ;;
             ( "-h" )
-                shorthelp
+                short_help
                 exit 0
                 ;;
             ( "-H"|"--help" )
-                fullhelp
+                full_help
                 exit 0
                 ;;
             ( * )
@@ -162,7 +162,7 @@ function readcliargs() {
 ################################################################################################
 # start argument reading
 
-readcliargs $commandargs ;
+read_cli_args $command_args ;
 
 # end argument reading
 ################################################################################################
