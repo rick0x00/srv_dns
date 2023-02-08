@@ -11,12 +11,25 @@
 # ============================================================ #
 
 ################################################################################################
+# start root user checking
+
+if [ $(id -u) -ne 0 ]; then
+    echo "Please use sudo or run the script as root."
+    exit 1
+fi
+
+# end root user checking
+################################################################################################
 # start set variables
 
 command_args=$*
 version="1.0"
+tool_name="srv_dns"
+job="started"
+priority="info"
 logs_directory="/var/log/srv_dns/"
 backup_directory="/var/backup/srv_dns/"
+uid_execution=$(id -u)
 
 # end set variables
 ################################################################################################
@@ -65,6 +78,27 @@ function show_version() {
 function show_change_directories() {
     echo "logs:     $logs_directory"
     echo "backups:  $backup_directory"
+}
+
+function logger() {
+    if [ -z "$*" ] || [ -z "$job" ] || [ -z "$priority" ]; then
+        echo "error: log not informed correctly"
+    else
+        if [ -d "$logs_directory" ]; then
+            #echo "logs directory already exist."
+            if [ -e "$logs_directory/$tool_name.log" ]; then
+                #echo "log file already exist."
+                echo "$(date --rfc-3339='s') $(hostname) $(dnsdomainname) $0[$PPID]: $job: $priority: $*" >> "$logs_directory/$tool_name.log"
+            else
+                echo "creating file $logs_directory/$tool_name.log to logs registry."
+                touch "$logs_directory/$tool_name.log"
+            fi
+        else
+            echo "creating directory $logs_directory to log registry."
+            mkdir -p "$logs_directory"
+        fi
+    fi
+    
 }
 
 function read_cli_args() {
@@ -166,3 +200,5 @@ read_cli_args $command_args ;
 
 # end argument reading
 ################################################################################################
+
+logger
