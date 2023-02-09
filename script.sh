@@ -79,12 +79,16 @@ function show_change_directories() {
 }
 
 function logger() {
+    # logger function
+    # exemple to use: logger -task 'value task' --priority 'value priority' -msg "log message"
     if [ -n "$1" ]; then
+    #echo "Log information specified"
         while [ -n "$1" ]; do
+            #echo "validating log values"
             case $1 in
                 ( "-task"|"--task" )
                     if [ -n "$2" ] && [[ "$2" != -* ]]; then
-                        echo "registering log parameter: task=$2"
+                        #echo "registering log parameter: task=$2"
                         task="$2"
                         shift
                     else
@@ -93,7 +97,7 @@ function logger() {
                 ;;
                 ( "-priority"|"--priority" )
                     if [ -n "$2" ] && [[ "$2" != -* ]]; then
-                        echo "registering log parameter: priority=$2"
+                        #echo "registering log parameter: priority=$2"
                         priority="$2"
                         shift
                     else
@@ -102,7 +106,7 @@ function logger() {
                 ;;
                 ( "-msg"|"--msg"|"-message"|"--message" )
                     if [ -n "$2" ] && [[ "$2" != -* ]]; then
-                        echo "registering log parameter: message=$2"
+                        #echo "registering log parameter: message=$2"
                         log_msg="$2"
                         shift
                     else
@@ -111,6 +115,7 @@ function logger() {
                 ;;
                 ( * )
                     echo "unknown parameter to log: $1"
+                    break
                 ;;
             esac
             shift
@@ -122,11 +127,13 @@ function logger() {
         echo "message: $log_msg"
         else
             if [[  "$priority" == "emerg"||"alert"||"crit"||"err"||"warn"||"notice"||"debug"||"info" ]]; then
+                #echo "priority: value is valid: $priority"
                 while [ True ]; do
                     if [ -d "$logs_directory" ]; then
                         #echo "logs directory already exist."
                         if [ -e "$logs_directory/$tool_name.log" ]; then
                             #echo "log file already exist."
+                            #echo "writing log"
                             echo "$(date --rfc-3339='s') $(hostname) $0[$PPID]: $task: $priority: $log_msg" >> "$logs_directory/$tool_name.log"
                             break
                         else
@@ -141,7 +148,6 @@ function logger() {
             else
                 echo "Priority value '$priority' is not supported"
             fi
-            
         fi
     else
         echo "no log information specified"
