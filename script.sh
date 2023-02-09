@@ -241,7 +241,8 @@ function read_cli_args() {
         shift
     done
     if [ $num_arg_errors != 0 ]; then
-        echo "error: $num_arg_errors invalid arguments"    
+        echo "error: $num_arg_errors invalid arguments"
+        exit 1;    
     fi
 }
 
@@ -254,4 +255,4 @@ read_cli_args $command_args ;
 # end argument reading
 ################################################################################################
 
-logger -task testetarefa --priority harn -msg "texto do log"
+logger -task "script" --priority "info" -msg "=============== script started ==============="
