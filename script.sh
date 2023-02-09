@@ -25,8 +25,6 @@ fi
 command_args=$*
 version="1.0"
 tool_name="srv_dns"
-job="started"
-priority="info"
 logs_directory="/var/log/srv_dns/"
 backup_directory="/var/backup/srv_dns/"
 uid_execution=$(id -u)
@@ -81,24 +79,73 @@ function show_change_directories() {
 }
 
 function logger() {
-    if [ -z "$*" ] || [ -z "$job" ] || [ -z "$priority" ]; then
+    if [ -n "$1" ]; then
+        while [ -n "$1" ]; do
+            case $1 in
+                ( "-task"|"--task" )
+                    if [ -n "$2" ] && [[ "$2" != -* ]]; then
+                        echo "registering log parameter: task=$2"
+                        task="$2"
+                        shift
+                    else
+                        echo "error: log parameter incorrect: task=$2"
+                    fi
+                ;;
+                ( "-priority"|"--priority" )
+                    if [ -n "$2" ] && [[ "$2" != -* ]]; then
+                        echo "registering log parameter: priority=$2"
+                        priority="$2"
+                        shift
+                    else
+                        echo "error: log parameter incorrect: priority=$2"
+                    fi
+                ;;
+                ( "-msg"|"--msg"|"-message"|"--message" )
+                    if [ -n "$2" ] && [[ "$2" != -* ]]; then
+                        echo "registering log parameter: message=$2"
+                        log_msg="$2"
+                        shift
+                    else
+                        echo "error: log parameter incorrect: message=$2"
+                    fi
+                ;;
+                ( * )
+                    echo "unknown parameter to log: $1"
+                ;;
+            esac
+            shift
+        done
+        if [ -z "$log_msg" ] || [ -z "$task" ] || [ -z "$priority" ]; then
         echo "error: log not informed correctly"
-    else
-        if [ -d "$logs_directory" ]; then
-            #echo "logs directory already exist."
-            if [ -e "$logs_directory/$tool_name.log" ]; then
-                #echo "log file already exist."
-                echo "$(date --rfc-3339='s') $(hostname) $(dnsdomainname) $0[$PPID]: $job: $priority: $*" >> "$logs_directory/$tool_name.log"
-            else
-                echo "creating file $logs_directory/$tool_name.log to logs registry."
-                touch "$logs_directory/$tool_name.log"
-            fi
+        echo "task: $task"
+        echo "priority: $priority"
+        echo "message: $log_msg"
         else
-            echo "creating directory $logs_directory to log registry."
-            mkdir -p "$logs_directory"
+            if [[  "$priority" == "emerg"||"alert"||"crit"||"err"||"warn"||"notice"||"debug"||"info" ]]; then
+                while [ True ]; do
+                    if [ -d "$logs_directory" ]; then
+                        #echo "logs directory already exist."
+                        if [ -e "$logs_directory/$tool_name.log" ]; then
+                            #echo "log file already exist."
+                            echo "$(date --rfc-3339='s') $(hostname) $0[$PPID]: $task: $priority: $log_msg" >> "$logs_directory/$tool_name.log"
+                            break
+                        else
+                            echo "creating file $logs_directory/$tool_name.log to logs registry."
+                            touch "$logs_directory/$tool_name.log"
+                        fi
+                    else
+                        echo "creating directory $logs_directory to log registry."
+                        mkdir -p "$logs_directory"
+                    fi
+                done
+            else
+                echo "Priority value '$priority' is not supported"
+            fi
+            
         fi
-    fi
-    
+    else
+        echo "no log information specified"
+    fi 
 }
 
 function read_cli_args() {
@@ -201,4 +248,4 @@ read_cli_args $command_args ;
 # end argument reading
 ################################################################################################
 
-logger
+logger -task testetarefa --priority harn -msg "texto do log"
