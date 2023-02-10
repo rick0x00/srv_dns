@@ -29,6 +29,10 @@ logs_directory="/var/log/srv_dns/"
 backup_directory="/var/backup/srv_dns/"
 uid_execution=$(id -u)
 
+
+division_equal_line="================================================================================"
+division_short_equal_line="========================================"
+
 # end set variables
 ################################################################################################
 # start definition functions
@@ -55,8 +59,8 @@ function full_help() {
     echo "  -dns, --dns <dns>"
     echo "      DNS Software solution.";
     echo "      [default: bind] [possible values: bind]";
-    echo "  -cd, --change-directories"
-    echo "      Show directories to be changed/maked by the tool.";
+    echo "  -clp, --changelog-preview"
+    echo "      Show changelog preview to be changed/maked by the tool.";
     echo "  -v, --version"
     echo "      Report version of tool.";
     echo "  -h";
@@ -73,9 +77,16 @@ function show_version() {
     echo "version: $version"
 }
 
-function show_change_directories() {
+function show_changelog-preview() {
+    echo "$division_short_equal_line"
+    echo "the following directory will be created"
     echo "logs:     $logs_directory"
     echo "backups:  $backup_directory"
+    echo ""
+    echo "the following files will be created"
+    echo "logs:     $logs_directory/$tool_name.log"
+    echo "          $logs_directory/summary.log"
+    echo "$division_short_equal_line"
 }
 
 function logger() {
@@ -217,8 +228,8 @@ function read_cli_args() {
                     num_arg_errors=$(($num_arg_errors+1));
                 fi
                 ;;
-            ( "-cd"|"--change-directories" )
-                show_change_directories
+            ( "-clp"|"--changelog-preview" )
+                show_changelog-preview
                 exit 0
                 ;;
             ( "-v"|"--version" )
