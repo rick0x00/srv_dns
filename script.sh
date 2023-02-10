@@ -154,6 +154,7 @@ function logger() {
                         else
                             echo "creating file $logs_directory/execution.log to logs registry."
                             touch "$logs_directory/execution.log"
+                            echo "$(date --rfc-3339='s') $(hostname) $0[$PPID]: rick0x00 script executed" >> /var/log/syslog
                         fi
                     else
                         echo "creating directory $logs_directory to log registry."
