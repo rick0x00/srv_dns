@@ -1,14 +1,18 @@
 #!/usr/bin/env bash
 
+function credits() {
+echo "
 # ============================================================ #
-# Created date: 05 fev 2023                                    #
-# Created by: Henrique Silva rick.0x00@gmail.com               #
-# Name: srv_dns                                                #
+# Tool Created date: 05 fev 2023                               #
+# Tool Created by: Henrique Silva (rick.0x00@gmail.com)        #
+# Tool Name: srv_dns                                           #
 # Description: Script to help in the creation of DNS servers   #
 # License: MIT License                                         #
 # Remote repository 1: https://github.com/rick0x00/srv_dns     #
 # Remote repository 2: https://gitlab.com/rick0x00/srv_dns     #
 # ============================================================ #
+"
+}
 
 ################################################################################################
 # start root user checking
@@ -84,7 +88,7 @@ function show_changelog-preview() {
     echo "backups:  $backup_directory"
     echo ""
     echo "the following files will be created"
-    echo "logs:     $logs_directory/$tool_name.log"
+    echo "logs:     $logs_directory/execution.log"
     echo "          $logs_directory/summary.log"
     echo "$division_short_equal_line"
 }
@@ -142,14 +146,14 @@ function logger() {
                 while [ True ]; do
                     if [ -d "$logs_directory" ]; then
                         #echo "logs directory already exist."
-                        if [ -e "$logs_directory/$tool_name.log" ]; then
+                        if [ -e "$logs_directory/execution.log" ]; then
                             #echo "log file already exist."
                             #echo "writing log"
-                            echo "$(date --rfc-3339='s') $(hostname) $0[$PPID]: $task: $priority: $log_msg" >> "$logs_directory/$tool_name.log"
+                            echo "$(date --rfc-3339='s') $(hostname) $0[$PPID]: $task: $priority: $log_msg" >> "$logs_directory/execution.log"
                             break
                         else
-                            echo "creating file $logs_directory/$tool_name.log to logs registry."
-                            touch "$logs_directory/$tool_name.log"
+                            echo "creating file $logs_directory/execution.log to logs registry."
+                            touch "$logs_directory/execution.log"
                         fi
                     else
                         echo "creating directory $logs_directory to log registry."
@@ -266,4 +270,6 @@ read_cli_args $command_args ;
 # end argument reading
 ################################################################################################
 
-logger -task "script" --priority "info" -msg "=============== script started ==============="
+logger -task "script" --priority "info" -msg "=============== script started ===============";
+credits > $logs_directory/summary.log;
+credits;
