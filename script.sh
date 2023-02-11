@@ -93,83 +93,6 @@ function show_changelog-preview() {
     echo "$division_short_equal_line"
 }
 
-function logger() {
-    # logger function
-    # exemple to use: logger -task 'value task' --priority 'value priority' -msg "log message"
-    if [ -n "$1" ]; then
-    #echo "Log information specified"
-        while [ -n "$1" ]; do
-            #echo "validating log values"
-            case $1 in
-                ( "-task"|"--task" )
-                    if [ -n "$2" ] && [[ "$2" != -* ]]; then
-                        #echo "registering log parameter: task=$2"
-                        task="$2"
-                        shift
-                    else
-                        echo "error: log parameter incorrect: task=$2"
-                    fi
-                ;;
-                ( "-priority"|"--priority" )
-                    if [ -n "$2" ] && [[ "$2" != -* ]]; then
-                        #echo "registering log parameter: priority=$2"
-                        priority="$2"
-                        shift
-                    else
-                        echo "error: log parameter incorrect: priority=$2"
-                    fi
-                ;;
-                ( "-msg"|"--msg"|"-message"|"--message" )
-                    if [ -n "$2" ] && [[ "$2" != -* ]]; then
-                        #echo "registering log parameter: message=$2"
-                        log_msg="$2"
-                        shift
-                    else
-                        echo "error: log parameter incorrect: message=$2"
-                    fi
-                ;;
-                ( * )
-                    echo "unknown parameter to log: $1"
-                    break
-                ;;
-            esac
-            shift
-        done
-        if [ -z "$log_msg" ] || [ -z "$task" ] || [ -z "$priority" ]; then
-        echo "error: log not informed correctly"
-        echo "task: $task"
-        echo "priority: $priority"
-        echo "message: $log_msg"
-        else
-            if [[  "$priority" == "emerg"||"alert"||"crit"||"err"||"warn"||"notice"||"debug"||"info" ]]; then
-                #echo "priority: value is valid: $priority"
-                while [ True ]; do
-                    if [ -d "$logs_directory" ]; then
-                        #echo "logs directory already exist."
-                        if [ -e "$logs_directory/execution.log" ]; then
-                            #echo "log file already exist."
-                            #echo "writing log"
-                            echo "$(date --rfc-3339='s') $(hostname) $0[$PPID]: $task: $priority: $log_msg" >> "$logs_directory/execution.log"
-                            break
-                        else
-                            echo "creating file $logs_directory/execution.log to logs registry."
-                            touch "$logs_directory/execution.log"
-                            echo "$(date --rfc-3339='s') $(hostname) $0[$PPID]: rick0x00 script executed" >> /var/log/syslog
-                        fi
-                    else
-                        echo "creating directory $logs_directory to log registry."
-                        mkdir -p "$logs_directory"
-                    fi
-                done
-            else
-                echo "Priority value '$priority' is not supported"
-            fi
-        fi
-    else
-        echo "no log information specified"
-    fi 
-}
-
 function read_cli_args() {
     num_arg_errors=0
     while [ -n "$1" ]; do
@@ -262,6 +185,94 @@ function read_cli_args() {
     fi
 }
 
+function logger() {
+    # logger function
+    # exemple to use: logger -task 'value task' --priority 'value priority' -msg "log message"
+    if [ -n "$1" ]; then
+    #echo "Log information specified"
+        while [ -n "$1" ]; do
+            #echo "validating log values"
+            case $1 in
+                ( "-task"|"--task" )
+                    if [ -n "$2" ] && [[ "$2" != -* ]]; then
+                        #echo "registering log parameter: task=$2"
+                        task="$2"
+                        shift
+                    else
+                        echo "error: log parameter incorrect: task=$2"
+                    fi
+                ;;
+                ( "-priority"|"--priority" )
+                    if [ -n "$2" ] && [[ "$2" != -* ]]; then
+                        #echo "registering log parameter: priority=$2"
+                        priority="$2"
+                        shift
+                    else
+                        echo "error: log parameter incorrect: priority=$2"
+                    fi
+                ;;
+                ( "-msg"|"--msg"|"-message"|"--message" )
+                    if [ -n "$2" ] && [[ "$2" != -* ]]; then
+                        #echo "registering log parameter: message=$2"
+                        log_msg="$2"
+                        shift
+                    else
+                        echo "error: log parameter incorrect: message=$2"
+                    fi
+                ;;
+                ( "-show"|"--show" )
+                    #echo "set show log parameter"
+                    show_msg="1"
+                ;;
+                ( * )
+                    echo "unknown parameter to log: $1"
+                    unrecognized_parameters="$1 $unrecognized_parameters"
+                ;;
+            esac
+            shift
+        done
+        if [  -n "$unrecognized_parameters" ] || [ -z "$log_msg" ] || [ -z "$task" ] || [ -z "$priority" ]; then
+        echo "error: log not informed correctly"
+        echo "task: $task"
+        echo "priority: $priority"
+        echo "message: $log_msg"
+            if [ -n "$unrecognized_parameters" ]; then
+                echo "unrecognized parameters: $unrecognized_parameters"
+            fi
+        else
+            if [[  "$priority" == "emerg"||"alert"||"crit"||"err"||"warn"||"notice"||"debug"||"info" ]]; then
+                #echo "priority: value is valid: $priority"
+                while [ True ]; do
+                    if [ -d "$logs_directory" ]; then
+                        #echo "logs directory already exist."
+                        if [ -e "$logs_directory/execution.log" ]; then
+                            #echo "log file already exist."
+                            #echo "writing log"
+                            echo "$(date --rfc-3339='s') $(hostname) $0[$PPID]: $task: $priority: $log_msg" >> "$logs_directory/execution.log"
+                            if [ "$show_msg" == "1" ]; then
+                                #echo "show log message"
+                                echo "$log_msg"
+                            fi
+                            break
+                        else
+                            echo "creating file $logs_directory/execution.log to logs registry."
+                            touch "$logs_directory/execution.log"
+                            echo "$(date --rfc-3339='s') $(hostname) $0[$PPID]: rick0x00 script executed" >> /var/log/syslog
+                        fi
+                    else
+                        echo "creating directory $logs_directory to log registry."
+                        mkdir -p "$logs_directory"
+                    fi
+                done
+            else
+                echo "Priority value '$priority' is not supported"
+            fi
+        fi
+    else
+        echo "no log information specified"
+    fi 
+}
+
 # end definition functions
 ################################################################################################
 # start argument reading
@@ -271,6 +282,7 @@ read_cli_args $command_args ;
 # end argument reading
 ################################################################################################
 
-logger -task "script" --priority "info" -msg "=============== script started ===============";
 credits > $logs_directory/summary.log;
 credits;
+logger -task "script" --priority "info" -msg "=============== script started ===============" --show;
+logger -task "install" --priority "alert" -msg "teste de mensagem" --show;
