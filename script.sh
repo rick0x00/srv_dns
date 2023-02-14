@@ -273,6 +273,86 @@ function logger() {
     fi 
 }
 
+function task_bar() {
+    actual_task=$1
+    total_task=$2
+    task=$3
+    shift_line=$4
+    clear_line_bar=$5
+    yx_stty=$(stty size)
+    width_tty=${yx_stty#* }
+    if [ "$shift_line" == "1" ]; then
+        echo -en "\n"
+    else
+        echo -en "\r"
+    fi
+    if [ "$clear_line_bar" == "1" ]; then
+        for (( c=1; c<=$width_tty; c++ )); do echo -en " " ; done
+    else
+        for (( c=1; c<=$width_tty; c++ )); do echo -en " " ; done
+        echo -en "\r"
+        echo -en "\033[1m"
+        echo -en "TASK "
+        echo -en "[$actual_task/$total_task]: "
+        echo -en "\033[0m"
+        echo -en "$task"
+    fi
+}
+
+function progress_bar() {
+    percent=$1
+    shift_line=$2
+    clear_line_bar=$3
+    yx_stty=$(stty size)
+    width_tty=${yx_stty#* }
+    width_bar=$(((width_tty-15)-2))
+    bar_percent=$((($percent*$width_bar)/100))
+    complement_bar_percent=$(($width_bar-$bar_percent))
+    if [ "$shift_line" == "1" ]; then
+        echo -en "\n"
+    else
+        echo -en "\r"
+    fi
+    if [ "$clear_line_bar" == "1" ]; then
+        for (( c=1; c<=$width_tty; c++ )); do echo -en " " ; done
+    else
+        for (( c=1; c<=$width_tty; c++ )); do echo -en " " ; done
+        echo -en "\r"
+        echo -en "\033[1m"
+        echo -en "PROGRESS "
+        echo -en "\033[0m"
+        echo -en "["
+        echo -en "\033[30m"
+        echo -en "\033[46m"
+        for (( c=1; c<=$bar_percent; c++ )); do echo -en "#" ; done
+        echo -en "\033[0m"
+        echo -en "\033[1m"
+        #echo -en "($percent%)"
+        printf '(%4s)' "$percent%"
+        echo -en "\033[0m"
+        for (( c=1; c<=$complement_bar_percent; c++ )); do echo -en "." ; done
+        echo -en "]"
+    fi
+}
+
+function full_progress_bar() {
+    actual=$1
+    total=$2
+    msg=$3
+    update_progress=$4
+    clear=$5
+    if [[ "$update_progress" == "1" ]]; then 
+        echo -en "\033[1A"
+        echo -en "\r"   
+    else
+        echo -en "\n"
+    fi 
+    percent="$((($actual*100)/$total))"
+    progress_bar $percent 0 $clear
+    task_bar $actual $total $msg 1 $clear
+}
+
+
 # end definition functions
 ################################################################################################
 # start argument reading
