@@ -274,28 +274,114 @@ function logger() {
 }
 
 function task_bar() {
-    actual_task=$1
-    total_task=$2
-    task=$3
-    shift_line=$4
-    clear_line_bar=$5
-    yx_stty=$(stty size)
-    width_tty=${yx_stty#* }
-    if [ "$shift_line" == "1" ]; then
-        echo -en "\n"
+    # task bar function
+    # example to use: task_bar -at 'actual task number' --tt 'total number of tasks' -task 'short task description' -slb '1|0' -sla '1|0' -cl '1|0'
+    if [ -n "$1" ]; then
+        #echo "task bar information available"
+        while [ -n "$1" ]; do
+            #echo "validating task bar values"
+            case "$1" in
+                ( "-at"|"--at"|"-actual"|"--actual"|"-actual-task"|"--actual-task" )
+                    if [ -n "$2" ] && [[ "$2" != -* ]]; then
+                        #echo "registering task parameters: actual-task=$2"
+                        actual_task=$2
+                        shift
+                    else
+                        echo "Error: task parameter incorrect: actual-task=$2"
+                    fi
+                ;;
+                ( "-tt"|"--tt"|"-total"|"--total"|"-total-tasks"|"--total-tasks" )
+                    if [ -n "$2" ] && [[ "$2" != -* ]]; then
+                        #echo "registering task parameters: total-tasks=$2"
+                        total_tasks=$2
+                        shift
+                    else
+                        echo "Error: task parameter incorrect: total-tasks=$2"
+                    fi
+                ;;
+                ( "-t"|"--t"|"-task"|"--task"|"-task-msg"|"--task-msg"|"-msg"|"--msg"  )
+                    if [ -n "$2" ] && [[ "$2" != -* ]]; then
+                        #echo "registering task parameters: task-msg=$2"
+                        task_msg=$2
+                        shift
+                    else
+                        echo "Error: task parameter incorrect: task-msg=$2"
+                    fi
+                ;;
+                ( "-slb"|"--slb"|"-shift-line-before"|"--shift-line-before" )
+                    if [ -n "$2" ] && [[ "$2" != -* ]]; then
+                        #echo "registering task parameters: shift-line-before=$2"
+                        shift_line_before=$2
+                        shift
+                    else
+                        echo "Error: task parameter incorrect: shift-line-before=$2"
+                    fi
+                ;;
+                ( "-sla"|"--sla"|"-shift-line-after"|"--shift-line-after" )
+                    if [ -n "$2" ] && [[ "$2" != -* ]]; then
+                        #echo "registering task parameters: shift-line-after=$2"
+                        shift_line_after=$2
+                        shift
+                    else
+                        echo "Error: task parameter incorrect: shift-line-after=$2"
+                    fi
+                ;;
+                ( "-cl"|"--cl"|"-clear-line"|"--clear-line" )
+                    if [ -n "$2" ] && [[ "$2" != -* ]]; then
+                        #echo "registering task parameters: clear-line=$2"
+                        clear_line=$2
+                        shift
+                    else
+                        echo "Error: task parameter incorrect: clear-line=$2"
+                    fi
+                ;;
+                ( * )
+                    echo "unknown parameter to task bar: $1"
+                    unrecognized_parameters="$1 $unrecognized_parameters"
+                ;;
+            esac
+            shift
+        done
     else
-        echo -en "\r"
+        echo "no task bar information available"
     fi
-    if [ "$clear_line_bar" == "1" ]; then
-        for (( c=1; c<=$width_tty; c++ )); do echo -en " " ; done
+    if [  -n "$unrecognized_parameters" ] || [ -z "$task_msg" ] || [ -z "$total_tasks" ] || [ -z "$actual_task" ] ; then
+        echo "error: log not informed correctly"
+        echo "task msg: $task_msg"
+        echo "total tasks: $total_tasks"
+        echo "actual task: $actual_task"
+        if [ -n "$unrecognized_parameters" ]; then
+            echo "unrecognized parameters: $unrecognized_parameters"
+        fi
     else
-        for (( c=1; c<=$width_tty; c++ )); do echo -en " " ; done
-        echo -en "\r"
-        echo -en "\033[1m"
-        echo -en "TASK "
-        echo -en "[$actual_task/$total_task]: "
-        echo -en "\033[0m"
-        echo -en "$task"
+        yx_stty=$(stty size)
+        width_tty=${yx_stty#* }
+        if [ -n "$shift_line_before" ]; then
+            if [ "$shift_line_before" == "1" ]; then
+                echo -en "\n"
+            elif [ "$shift_line_before" == "0" ]; then
+                echo -en "\r"
+            fi
+        fi
+        if [ -z "$clear_line" ]; then
+            clear_line=0
+        fi
+        if [ "$clear_line" == "1" ]; then
+            for (( c=1; c<=$width_tty; c++ )); do echo -en " " ; done
+        else
+            echo -en "\033[1m"
+            echo -en "TASK "
+            echo -en "[$actual_task/$total_tasks]: "
+            echo -en "\033[0m"
+            echo -en "$task_msg"
+        fi
+        if [ -n "$shift_line_after" ]; then
+            if [ "$shift_line_after" == "1" ]; then
+                echo -en "\n"
+            elif [ "$shift_line_after" == "0" ]; then
+                echo -en "\r"
+            fi
+        fi
     fi
 }
 
@@ -366,3 +452,4 @@ credits > $logs_directory/summary.log;
 credits;
 logger -task "script" --priority "info" -msg "=============== script started ===============" --show;
 logger -task "install" --priority "alert" -msg "teste de mensagem" --show;
+ 
