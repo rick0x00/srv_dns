@@ -346,7 +346,7 @@ function task_bar() {
         echo "no task bar information available"
     fi
     if [  -n "$unrecognized_parameters" ] || [ -z "$task_msg" ] || [ -z "$total_tasks" ] || [ -z "$actual_task" ] ; then
-        echo "error: log not informed correctly"
+        echo "error: task not informed correctly"
         echo "task msg: $task_msg"
         echo "total tasks: $total_tasks"
         echo "actual task: $actual_task"
@@ -386,58 +386,218 @@ function task_bar() {
 }
 
 function progress_bar() {
-    percent=$1
-    shift_line=$2
-    clear_line_bar=$3
-    yx_stty=$(stty size)
-    width_tty=${yx_stty#* }
-    width_bar=$(((width_tty-15)-2))
-    bar_percent=$((($percent*$width_bar)/100))
-    complement_bar_percent=$(($width_bar-$bar_percent))
-    if [ "$shift_line" == "1" ]; then
-        echo -en "\n"
+    # progress bar function
+    # example to use: progress_bar -percent 'percent value' -slb '1|0' -sla '1|0' -cl '1|0'
+    if [ -n "$1" ]; then
+        #echo "progress bar information available"
+        while [ -n "$1" ]; do
+            #echo "validating progress bar values"
+            case "$1" in
+                ( "-percent"|"--percent"  )
+                    if [ -n "$2" ] && [[ "$2" != -* ]]; then
+                        #echo "registering progress parameters: percent=$2"
+                        percent=$2
+                        shift
+                    else
+                        echo "Error: progress parameter incorrect: percent=$2"
+                    fi
+                ;;
+                ( "-slb"|"--slb"|"-shift-line-before"|"--shift-line-before" )
+                    if [ -n "$2" ] && [[ "$2" != -* ]]; then
+                        #echo "registering progress parameters: shift-line-before=$2"
+                        shift_line_before=$2
+                        shift
+                    else
+                        echo "Error: progress parameter incorrect: shift-line-before=$2"
+                    fi
+                ;;
+                ( "-sla"|"--sla"|"-shift-line-after"|"--shift-line-after" )
+                    if [ -n "$2" ] && [[ "$2" != -* ]]; then
+                        #echo "registering progress parameters: shift-line-after=$2"
+                        shift_line_after=$2
+                        shift
+                    else
+                        echo "Error: progress parameter incorrect: shift-line-after=$2"
+                    fi
+                ;;
+                ( "-cl"|"--cl"|"-clear-line"|"--clear-line" )
+                    if [ -n "$2" ] && [[ "$2" != -* ]]; then
+                        #echo "registering progress parameters: clear-line=$2"
+                        clear_line=$2
+                        shift
+                    else
+                        echo "Error: progress parameter incorrect: clear-line=$2"
+                    fi
+                ;;
+                ( * )
+                    echo "unknown parameter to progress bar: $1"
+                    unrecognized_parameters="$1 $unrecognized_parameters"
+                ;;
+            esac
+            shift
+        done
     else
-        echo -en "\r"
+        echo "no progress bar information available"
     fi
-    if [ "$clear_line_bar" == "1" ]; then
-        for (( c=1; c<=$width_tty; c++ )); do echo -en " " ; done
+    if [  -n "$unrecognized_parameters" ] || [ -z "$percent" ] ; then
+        echo "error: progress not informed correctly"
+        echo "percent: $percent"
+        if [ -n "$unrecognized_parameters" ]; then
+            echo "unrecognized parameters: $unrecognized_parameters"
+        fi
     else
-        for (( c=1; c<=$width_tty; c++ )); do echo -en " " ; done
-        echo -en "\r"
-        echo -en "\033[1m"
-        echo -en "PROGRESS "
-        echo -en "\033[0m"
-        echo -en "["
-        echo -en "\033[30m"
-        echo -en "\033[46m"
-        for (( c=1; c<=$bar_percent; c++ )); do echo -en "#" ; done
-        echo -en "\033[0m"
-        echo -en "\033[1m"
-        #echo -en "($percent%)"
-        printf '(%4s)' "$percent%"
-        echo -en "\033[0m"
-        for (( c=1; c<=$complement_bar_percent; c++ )); do echo -en "." ; done
-        echo -en "]"
+        yx_stty=$(stty size)
+        width_tty=${yx_stty#* }
+        width_bar=$(((width_tty-15)-2))
+        bar_percent=$((($percent*$width_bar)/100))
+        complement_bar_percent=$(($width_bar-$bar_percent))
+        if [ -n "$shift_line_before" ]; then
+            if [ "$shift_line_before" == "1" ]; then
+                echo -en "\n"
+            elif [ "$shift_line_before" == "0" ]; then
+                echo -en "\r"
+            fi
+        fi
+        if [ -z "$clear_line" ]; then
+            clear_line=0
+        fi
+        if [ "$clear_line" == "1" ]; then
+            for (( c=1; c<=$width_tty; c++ )); do echo -en " " ; done
+        else
+            echo -en "\033[1m"
+            echo -en "PROGRESS "
+            echo -en "\033[0m"
+            echo -en "["
+            echo -en "\033[30m"
+            echo -en "\033[46m"
+            for (( c=1; c<=$bar_percent; c++ )); do echo -en "#" ; done
+            echo -en "\033[0m"
+            echo -en "\033[1m"
+            #echo -en "($percent%)"
+            printf '(%4s)' "$percent%"
+            echo -en "\033[0m"
+            for (( c=1; c<=$complement_bar_percent; c++ )); do echo -en "." ; done
+            echo -en "]"
+        fi
+        if [ -n "$shift_line_after" ]; then
+            if [ "$shift_line_after" == "1" ]; then
+                echo -en "\n"
+            elif [ "$shift_line_after" == "0" ]; then
+                echo -en "\r"
+            fi
+        fi
     fi
+
 }
 
-function full_progress_bar() {
-    actual=$1
-    total=$2
-    msg=$3
-    update_progress=$4
-    clear=$5
-    if [[ "$update_progress" == "1" ]]; then 
-        echo -en "\033[1A"
-        echo -en "\r"   
+function status_bar() {
+    # status bar function
+    # example to use: status_bar -at 'actual task number' --tt 'total number of tasks' -task 'short task description' -slb '1|0' -sla '1|0' -cl '1|0'
+    if [ -n "$1" ]; then
+        #echo "status bar information available"
+        while [ -n "$1" ]; do
+            #echo "validating status bar values"
+            case "$1" in
+                ( "-at"|"--at"|"-actual"|"--actual"|"-actual-task"|"--actual-task" )
+                    if [ -n "$2" ] && [[ "$2" != -* ]]; then
+                        #echo "registering status parameters: actual-task=$2"
+                        actual_task=$2
+                        shift
+                    else
+                        echo "Error: status parameter incorrect: actual-task=$2"
+                    fi
+                ;;
+                ( "-tt"|"--tt"|"-total"|"--total"|"-total-tasks"|"--total-tasks" )
+                    if [ -n "$2" ] && [[ "$2" != -* ]]; then
+                        #echo "registering status parameters: total-tasks=$2"
+                        total_tasks=$2
+                        shift
+                    else
+                        echo "Error: status parameter incorrect: total-tasks=$2"
+                    fi
+                ;;
+                ( "-t"|"--t"|"-task"|"--task"|"-task-msg"|"--task-msg"|"-msg"|"--msg"  )
+                    if [ -n "$2" ] && [[ "$2" != -* ]]; then
+                        #echo "registering status parameters: task-msg=$2"
+                        task_msg=$2
+                        shift
+                    else
+                        echo "Error: status parameter incorrect: task-msg=$2"
+                    fi
+                ;;
+                ( "-slb"|"--slb"|"-shift-line-before"|"--shift-line-before" )
+                    if [ -n "$2" ] && [[ "$2" != -* ]]; then
+                        #echo "registering status parameters: shift-line-before=$2"
+                        shift_line_before=$2
+                        shift
+                    else
+                        echo "Error: status parameter incorrect: shift-line-before=$2"
+                    fi
+                ;;
+                ( "-sla"|"--sla"|"-shift-line-after"|"--shift-line-after" )
+                    if [ -n "$2" ] && [[ "$2" != -* ]]; then
+                        #echo "registering status parameters: shift-line-after=$2"
+                        shift_line_after=$2
+                        shift
+                    else
+                        echo "Error: status parameter incorrect: shift-line-after=$2"
+                    fi
+                ;;
+                ( "-cl"|"--cl"|"-clear-line"|"--clear-line" )
+                    if [ -n "$2" ] && [[ "$2" != -* ]]; then
+                        #echo "registering status parameters: clear-line=$2"
+                        clear_line=$2
+                        shift
+                    else
+                        echo "Error: status parameter incorrect: clear-line=$2"
+                    fi
+                ;;
+                ( * )
+                    echo "unknown parameter to status bar: $1"
+                    unrecognized_parameters="$1 $unrecognized_parameters"
+                ;;
+            esac
+            shift
+        done
     else
-        echo -en "\n"
-    fi 
-    percent="$((($actual*100)/$total))"
-    progress_bar $percent 0 $clear
-    task_bar $actual $total $msg 1 $clear
+        echo "no status bar information available"
+    fi
+    if [  -n "$unrecognized_parameters" ] || [ -z "$task_msg" ] || [ -z "$total_tasks" ] || [ -z "$actual_task" ] ; then
+        echo "error: status not informed correctly"
+        echo "task msg: $task_msg"
+        echo "total tasks: $total_tasks"
+        echo "actual task: $actual_task"
+        if [ -n "$unrecognized_parameters" ]; then
+            echo "unrecognized parameters: $unrecognized_parameters"
+        fi
+    else
+        width_tty=${yx_stty#* }
+        percent="$((($actual_task*100)/$total_tasks))"
+        if [ -n "$shift_line_before" ]; then
+            if [ "$shift_line_before" == "1" ]; then
+                echo -en "\n"
+            elif [ "$shift_line_before" == "0" ]; then
+                echo -en "\r"
+            fi
+        fi
+        if [ -z "$clear_line" ]; then
+            clear_line=0
+        fi
+        if [ "$clear_line" == "1" ]; then
+            for (( c=1; c<=$width_tty; c++ )); do echo -en " " ; done
+        else
+            progress_bar -percent "$percent" -slb '0' -sla '1' -cl '0'
+            task_bar -tt "$total_tasks" -at "$actual_task" -msg "$task_msg" -slb '0' -slb '0' -cl '0'   
+        fi
+        if [ -n "$shift_line_after" ]; then
+            if [ "$shift_line_after" == "1" ]; then
+                echo -en "\n"
+            elif [ "$shift_line_after" == "0" ]; then
+                echo -en "\r"
+            fi
+        fi
+    fi
 }
-
 
 # end definition functions
 ################################################################################################
@@ -452,4 +612,5 @@ credits > $logs_directory/summary.log;
 credits;
 logger -task "script" --priority "info" -msg "=============== script started ===============" --show;
 logger -task "install" --priority "alert" -msg "teste de mensagem" --show;
- 
+
+status_bar -tt 1 -at 0 -msg "script started" -sla '1' -slb '1' -cl '0'
