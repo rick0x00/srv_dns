@@ -284,7 +284,7 @@ function task_bar() {
                 ( "-at"|"--at"|"-actual"|"--actual"|"-actual-task"|"--actual-task" )
                     if [ -n "$2" ] && [[ "$2" != -* ]]; then
                         #echo "registering task parameters: actual-task=$2"
-                        actual_task=$2
+                        local actual_task=$2
                         shift
                     else
                         echo "Error: task parameter incorrect: actual-task=$2"
@@ -293,7 +293,7 @@ function task_bar() {
                 ( "-tt"|"--tt"|"-total"|"--total"|"-total-tasks"|"--total-tasks" )
                     if [ -n "$2" ] && [[ "$2" != -* ]]; then
                         #echo "registering task parameters: total-tasks=$2"
-                        total_tasks=$2
+                        local total_tasks=$2
                         shift
                     else
                         echo "Error: task parameter incorrect: total-tasks=$2"
@@ -302,7 +302,7 @@ function task_bar() {
                 ( "-t"|"--t"|"-task"|"--task"|"-task-msg"|"--task-msg"|"-msg"|"--msg"  )
                     if [ -n "$2" ] && [[ "$2" != -* ]]; then
                         #echo "registering task parameters: task-msg=$2"
-                        task_msg=$2
+                        local task_msg=$2
                         shift
                     else
                         echo "Error: task parameter incorrect: task-msg=$2"
@@ -311,7 +311,7 @@ function task_bar() {
                 ( "-slb"|"--slb"|"-shift-line-before"|"--shift-line-before" )
                     if [ -n "$2" ] && [[ "$2" != -* ]]; then
                         #echo "registering task parameters: shift-line-before=$2"
-                        shift_line_before=$2
+                        local shift_line_before=$2
                         shift
                     else
                         echo "Error: task parameter incorrect: shift-line-before=$2"
@@ -320,7 +320,7 @@ function task_bar() {
                 ( "-sla"|"--sla"|"-shift-line-after"|"--shift-line-after" )
                     if [ -n "$2" ] && [[ "$2" != -* ]]; then
                         #echo "registering task parameters: shift-line-after=$2"
-                        shift_line_after=$2
+                        local shift_line_after=$2
                         shift
                     else
                         echo "Error: task parameter incorrect: shift-line-after=$2"
@@ -329,7 +329,7 @@ function task_bar() {
                 ( "-cl"|"--cl"|"-clear-line"|"--clear-line" )
                     if [ -n "$2" ] && [[ "$2" != -* ]]; then
                         #echo "registering task parameters: clear-line=$2"
-                        clear_line=$2
+                        local clear_line=$2
                         shift
                     else
                         echo "Error: task parameter incorrect: clear-line=$2"
@@ -337,7 +337,7 @@ function task_bar() {
                 ;;
                 ( * )
                     echo "unknown parameter to task bar: $1"
-                    unrecognized_parameters="$1 $unrecognized_parameters"
+                    local unrecognized_parameters="$1 $unrecognized_parameters"
                 ;;
             esac
             shift
@@ -354,8 +354,8 @@ function task_bar() {
             echo "unrecognized parameters: $unrecognized_parameters"
         fi
     else
-        yx_stty=$(stty size)
-        width_tty=${yx_stty#* }
+        local yx_stty=$(stty size)
+        local width_tty=${yx_stty#* }
         if [ -n "$shift_line_before" ]; then
             if [ "$shift_line_before" == "1" ]; then
                 echo -en "\n"
@@ -364,7 +364,7 @@ function task_bar() {
             fi
         fi
         if [ -z "$clear_line" ]; then
-            clear_line=0
+            local clear_line=0
         fi
         if [ "$clear_line" == "1" ]; then
             for (( c=1; c<=$width_tty; c++ )); do echo -en " " ; done
@@ -396,7 +396,7 @@ function progress_bar() {
                 ( "-percent"|"--percent"  )
                     if [ -n "$2" ] && [[ "$2" != -* ]]; then
                         #echo "registering progress parameters: percent=$2"
-                        percent=$2
+                        local percent=$2
                         shift
                     else
                         echo "Error: progress parameter incorrect: percent=$2"
@@ -405,7 +405,7 @@ function progress_bar() {
                 ( "-slb"|"--slb"|"-shift-line-before"|"--shift-line-before" )
                     if [ -n "$2" ] && [[ "$2" != -* ]]; then
                         #echo "registering progress parameters: shift-line-before=$2"
-                        shift_line_before=$2
+                        local shift_line_before=$2
                         shift
                     else
                         echo "Error: progress parameter incorrect: shift-line-before=$2"
@@ -414,7 +414,7 @@ function progress_bar() {
                 ( "-sla"|"--sla"|"-shift-line-after"|"--shift-line-after" )
                     if [ -n "$2" ] && [[ "$2" != -* ]]; then
                         #echo "registering progress parameters: shift-line-after=$2"
-                        shift_line_after=$2
+                        local shift_line_after=$2
                         shift
                     else
                         echo "Error: progress parameter incorrect: shift-line-after=$2"
@@ -423,7 +423,7 @@ function progress_bar() {
                 ( "-cl"|"--cl"|"-clear-line"|"--clear-line" )
                     if [ -n "$2" ] && [[ "$2" != -* ]]; then
                         #echo "registering progress parameters: clear-line=$2"
-                        clear_line=$2
+                        local clear_line=$2
                         shift
                     else
                         echo "Error: progress parameter incorrect: clear-line=$2"
@@ -431,7 +431,7 @@ function progress_bar() {
                 ;;
                 ( * )
                     echo "unknown parameter to progress bar: $1"
-                    unrecognized_parameters="$1 $unrecognized_parameters"
+                    local unrecognized_parameters="$1 $unrecognized_parameters"
                 ;;
             esac
             shift
@@ -446,11 +446,11 @@ function progress_bar() {
             echo "unrecognized parameters: $unrecognized_parameters"
         fi
     else
-        yx_stty=$(stty size)
-        width_tty=${yx_stty#* }
-        width_bar=$(((width_tty-15)-2))
-        bar_percent=$((($percent*$width_bar)/100))
-        complement_bar_percent=$(($width_bar-$bar_percent))
+        local yx_stty=$(stty size)
+        local width_tty=${yx_stty#* }
+        local width_bar=$(((width_tty-15)-2))
+        local bar_percent=$((($percent*$width_bar)/100))
+        local complement_bar_percent=$(($width_bar-$bar_percent))
         if [ -n "$shift_line_before" ]; then
             if [ "$shift_line_before" == "1" ]; then
                 echo -en "\n"
@@ -459,7 +459,7 @@ function progress_bar() {
             fi
         fi
         if [ -z "$clear_line" ]; then
-            clear_line=0
+            local clear_line=0
         fi
         if [ "$clear_line" == "1" ]; then
             for (( c=1; c<=$width_tty; c++ )); do echo -en " " ; done
@@ -501,7 +501,7 @@ function status_bar() {
                 ( "-at"|"--at"|"-actual"|"--actual"|"-actual-task"|"--actual-task" )
                     if [ -n "$2" ] && [[ "$2" != -* ]]; then
                         #echo "registering status parameters: actual-task=$2"
-                        actual_task=$2
+                        local actual_task=$2
                         shift
                     else
                         echo "Error: status parameter incorrect: actual-task=$2"
@@ -510,7 +510,7 @@ function status_bar() {
                 ( "-tt"|"--tt"|"-total"|"--total"|"-total-tasks"|"--total-tasks" )
                     if [ -n "$2" ] && [[ "$2" != -* ]]; then
                         #echo "registering status parameters: total-tasks=$2"
-                        total_tasks=$2
+                        local total_tasks=$2
                         shift
                     else
                         echo "Error: status parameter incorrect: total-tasks=$2"
@@ -519,7 +519,7 @@ function status_bar() {
                 ( "-t"|"--t"|"-task"|"--task"|"-task-msg"|"--task-msg"|"-msg"|"--msg"  )
                     if [ -n "$2" ] && [[ "$2" != -* ]]; then
                         #echo "registering status parameters: task-msg=$2"
-                        task_msg=$2
+                        local task_msg=$2
                         shift
                     else
                         echo "Error: status parameter incorrect: task-msg=$2"
@@ -528,7 +528,7 @@ function status_bar() {
                 ( "-slb"|"--slb"|"-shift-line-before"|"--shift-line-before" )
                     if [ -n "$2" ] && [[ "$2" != -* ]]; then
                         #echo "registering status parameters: shift-line-before=$2"
-                        shift_line_before=$2
+                        local shift_line_before=$2
                         shift
                     else
                         echo "Error: status parameter incorrect: shift-line-before=$2"
@@ -537,7 +537,7 @@ function status_bar() {
                 ( "-sla"|"--sla"|"-shift-line-after"|"--shift-line-after" )
                     if [ -n "$2" ] && [[ "$2" != -* ]]; then
                         #echo "registering status parameters: shift-line-after=$2"
-                        shift_line_after=$2
+                        local shift_line_after=$2
                         shift
                     else
                         echo "Error: status parameter incorrect: shift-line-after=$2"
@@ -546,7 +546,7 @@ function status_bar() {
                 ( "-cl"|"--cl"|"-clear-line"|"--clear-line" )
                     if [ -n "$2" ] && [[ "$2" != -* ]]; then
                         #echo "registering status parameters: clear-line=$2"
-                        clear_line=$2
+                        local clear_line=$2
                         shift
                     else
                         echo "Error: status parameter incorrect: clear-line=$2"
@@ -554,7 +554,7 @@ function status_bar() {
                 ;;
                 ( * )
                     echo "unknown parameter to status bar: $1"
-                    unrecognized_parameters="$1 $unrecognized_parameters"
+                    local unrecognized_parameters="$1 $unrecognized_parameters"
                 ;;
             esac
             shift
@@ -571,8 +571,7 @@ function status_bar() {
             echo "unrecognized parameters: $unrecognized_parameters"
         fi
     else
-        width_tty=${yx_stty#* }
-        percent="$((($actual_task*100)/$total_tasks))"
+        local percent="$((($actual_task*100)/$total_tasks))"
         if [ -n "$shift_line_before" ]; then
             if [ "$shift_line_before" == "1" ]; then
                 echo -en "\n"
@@ -581,13 +580,21 @@ function status_bar() {
             fi
         fi
         if [ -z "$clear_line" ]; then
-            clear_line=0
+            local clear_line=0
         fi
         if [ "$clear_line" == "1" ]; then
+            local yx_stty=$(stty size)
+            local width_tty=${yx_stty#* }
+            echo -en "\033[1A"
+            echo -en "\r"
             for (( c=1; c<=$width_tty; c++ )); do echo -en " " ; done
+            echo -en "\033[1A"
+            echo -en "\r"
+            for (( c=1; c<=$width_tty; c++ )); do echo -en " " ; done
+            echo -en "\r"
         else
             progress_bar -percent "$percent" -slb '0' -sla '1' -cl '0'
-            task_bar -tt "$total_tasks" -at "$actual_task" -msg "$task_msg" -slb '0' -slb '0' -cl '0'   
+            task_bar -tt "$total_tasks" -at "$actual_task" -msg "$task_msg" -sla '0' -slb '0' -cl '0'   
         fi
         if [ -n "$shift_line_after" ]; then
             if [ "$shift_line_after" == "1" ]; then
@@ -598,6 +605,7 @@ function status_bar() {
         fi
     fi
 }
+
 
 # end definition functions
 ################################################################################################
