@@ -6,7 +6,7 @@ echo "
 # Tool Created date: 05 fev 2023                               #
 # Tool Created by: Henrique Silva (rick.0x00@gmail.com)        #
 # Tool Name: srv_dns                                           #
-# Description: Script to help in the creation of DNS servers   #
+# Description: Script for help in the creation of DNS servers  #
 # License: MIT License                                         #
 # Remote repository 1: https://github.com/rick0x00/srv_dns     #
 # Remote repository 2: https://gitlab.com/rick0x00/srv_dns     #
@@ -94,7 +94,7 @@ function show_changelog-preview() {
 }
 
 function read_cli_args() {
-    num_arg_errors=0
+    local num_arg_errors=0
     while [ -n "$1" ]; do
         if [ "$1" == "-h" ]; then
             short_help;
@@ -113,12 +113,12 @@ function read_cli_args() {
                             ;;
                         ( * )
                             echo 'error: unrecognized "'$2'" operational system.'
-                            num_arg_errors=$(($num_arg_errors+1))
+                            local num_arg_errors=$(($num_arg_errors+1))
                             ;;
                     esac
                 else
                     echo 'error: operational system not defined'
-                    num_arg_errors=$(($num_arg_errors+1));
+                    local num_arg_errors=$(($num_arg_errors+1));
                 fi
                 ;;
             ( "-ct"|"--container-technology" )
@@ -131,12 +131,12 @@ function read_cli_args() {
                             ;;
                         ( * )
                             echo 'error: unrecognized "'$2'" container technology option'
-                            num_arg_errors=$(($num_arg_errors+1))
+                            local num_arg_errors=$(($num_arg_errors+1))
                             ;;
                     esac
                 else
                     echo 'error: Container technology not defined'
-                    num_arg_errors=$(($num_arg_errors+1));
+                    local num_arg_errors=$(($num_arg_errors+1));
                 fi
                 ;;
             ( "-dns"|"--dns" )
@@ -148,12 +148,12 @@ function read_cli_args() {
                             ;;
                         ( * )
                             echo 'error: unrecognized "'$2'" DNS software option'
-                            num_arg_errors=$(($num_arg_errors+1))
+                            local num_arg_errors=$(($num_arg_errors+1))
                             ;;
                     esac
                 else
                     echo 'error: dns software not defined'
-                    num_arg_errors=$(($num_arg_errors+1));
+                    local num_arg_errors=$(($num_arg_errors+1));
                 fi
                 ;;
             ( "-clp"|"--changelog-preview" )
@@ -174,7 +174,7 @@ function read_cli_args() {
                 ;;
             ( * )
                 echo "error: unknown option: $1"
-                num_arg_errors=$(($num_arg_errors+1));
+                local num_arg_errors=$(($num_arg_errors+1));
             ;;
         esac
         shift
@@ -196,7 +196,7 @@ function logger() {
                 ( "-task"|"--task" )
                     if [ -n "$2" ] && [[ "$2" != -* ]]; then
                         #echo "registering log parameter: task=$2"
-                        task="$2"
+                        local task="$2"
                         shift
                     else
                         echo "error: log parameter incorrect: task=$2"
@@ -205,7 +205,7 @@ function logger() {
                 ( "-priority"|"--priority" )
                     if [ -n "$2" ] && [[ "$2" != -* ]]; then
                         #echo "registering log parameter: priority=$2"
-                        priority="$2"
+                        local priority="$2"
                         shift
                     else
                         echo "error: log parameter incorrect: priority=$2"
@@ -214,7 +214,7 @@ function logger() {
                 ( "-msg"|"--msg"|"-message"|"--message" )
                     if [ -n "$2" ] && [[ "$2" != -* ]]; then
                         #echo "registering log parameter: message=$2"
-                        log_msg="$2"
+                        local log_msg="$2"
                         shift
                     else
                         echo "error: log parameter incorrect: message=$2"
@@ -222,11 +222,11 @@ function logger() {
                 ;;
                 ( "-show"|"--show" )
                     #echo "set show log parameter"
-                    show_msg="1"
+                    local show_msg="1"
                 ;;
                 ( * )
                     echo "unknown parameter to log: $1"
-                    unrecognized_parameters="$1 $unrecognized_parameters"
+                    local unrecognized_parameters="$1 $unrecognized_parameters"
                 ;;
             esac
             shift
@@ -335,6 +335,15 @@ function task_bar() {
                         echo "Error: task parameter incorrect: clear-line=$2"
                     fi
                 ;;
+                ( "-ed"|"--ed"|"-enable-division"|"--enable-division" )
+                    if [ -n "$2" ] && [[ "$2" != -* ]]; then
+                        #echo "registering status parameters: enable-division=$2"
+                        local enable_division=$2
+                        shift
+                    else
+                        echo "Error: status parameter incorrect: enable-diivision=$2"
+                    fi
+                ;;
                 ( * )
                     echo "unknown parameter to task bar: $1"
                     local unrecognized_parameters="$1 $unrecognized_parameters"
@@ -356,6 +365,8 @@ function task_bar() {
     else
         local yx_stty=$(stty size)
         local width_tty=${yx_stty#* }
+        local icon_line1="-"
+        local icon_line2="-"
         if [ -n "$shift_line_before" ]; then
             if [ "$shift_line_before" == "1" ]; then
                 echo -en "\n"
@@ -369,11 +380,24 @@ function task_bar() {
         if [ "$clear_line" == "1" ]; then
             for (( c=1; c<=$width_tty; c++ )); do echo -en " " ; done
         else
+            if [ -z "$enable_division" ]; then
+                local enable_division=0
+            fi
+            if [ "$enable_division" == "1" ]; then
+                #echo $(for (( c=1; c<=$(stty size | cut -d' ' -f2); c++ )); do echo -en "_" ; done)
+                echo $(for (( c=1; c<=$width_tty; c++ )); do echo -en "$icon_line1" ; done)
+                #echo -en "\n"
+            fi
             echo -en "\033[1m"
             echo -en "TASK "
             echo -en "[$actual_task/$total_tasks]: "
             echo -en "\033[0m"
             echo -en "$task_msg"
+            if [ "$enable_division" == "1" ]; then
+                echo -en "\n"
+                #echo $(for (( c=1; c<=$(stty size | cut -d' ' -f2); c++ )); do echo -en "-" ; done)
+                echo $(for (( c=1; c<=$width_tty; c++ )); do echo -en "$icon_line2" ; done)
+            fi
         fi
         if [ -n "$shift_line_after" ]; then
             if [ "$shift_line_after" == "1" ]; then
@@ -429,6 +453,15 @@ function progress_bar() {
                         echo "Error: progress parameter incorrect: clear-line=$2"
                     fi
                 ;;
+                ( "-ed"|"--ed"|"-enable-division"|"--enable-division" )
+                    if [ -n "$2" ] && [[ "$2" != -* ]]; then
+                        #echo "registering status parameters: enable-division=$2"
+                        local enable_division=$2
+                        shift
+                    else
+                        echo "Error: status parameter incorrect: enable-diivision=$2"
+                    fi
+                ;;
                 ( * )
                     echo "unknown parameter to progress bar: $1"
                     local unrecognized_parameters="$1 $unrecognized_parameters"
@@ -451,6 +484,8 @@ function progress_bar() {
         local width_bar=$(((width_tty-15)-2))
         local bar_percent=$((($percent*$width_bar)/100))
         local complement_bar_percent=$(($width_bar-$bar_percent))
+        local icon_line1="-"
+        local icon_line2="-"
         if [ -n "$shift_line_before" ]; then
             if [ "$shift_line_before" == "1" ]; then
                 echo -en "\n"
@@ -464,6 +499,14 @@ function progress_bar() {
         if [ "$clear_line" == "1" ]; then
             for (( c=1; c<=$width_tty; c++ )); do echo -en " " ; done
         else
+            if [ -z "$enable_division" ]; then
+                local enable_division=0
+            fi
+            if [ "$enable_division" == "1" ]; then
+                #echo $(for (( c=1; c<=$(stty size | cut -d' ' -f2); c++ )); do echo -en "_" ; done)
+                echo $(for (( c=1; c<=$width_tty; c++ )); do echo -en "$icon_line1" ; done)
+                #echo -en "\n"
+            fi
             echo -en "\033[1m"
             echo -en "PROGRESS "
             echo -en "\033[0m"
@@ -478,6 +521,11 @@ function progress_bar() {
             echo -en "\033[0m"
             for (( c=1; c<=$complement_bar_percent; c++ )); do echo -en "." ; done
             echo -en "]"
+            if [ "$enable_division" == "1" ]; then
+                echo -en "\n"
+                #echo $(for (( c=1; c<=$(stty size | cut -d' ' -f2); c++ )); do echo -en "-" ; done)
+                echo $(for (( c=1; c<=$width_tty; c++ )); do echo -en "$icon_line2" ; done)
+            fi
         fi
         if [ -n "$shift_line_after" ]; then
             if [ "$shift_line_after" == "1" ]; then
@@ -492,7 +540,7 @@ function progress_bar() {
 
 function status_bar() {
     # status bar function
-    # example to use: status_bar -at 'actual task number' --tt 'total number of tasks' -task 'short task description' -slb '1|0' -sla '1|0' -cl '1|0'
+    # example to use: status_bar -at 'actual task number' --tt 'total number of tasks' -task 'short task description' -slb '1|0' -sla '1|0' -cl '1|0' -ed '1|0'
     if [ -n "$1" ]; then
         #echo "status bar information available"
         while [ -n "$1" ]; do
@@ -552,6 +600,15 @@ function status_bar() {
                         echo "Error: status parameter incorrect: clear-line=$2"
                     fi
                 ;;
+                ( "-ed"|"--ed"|"-enable-division"|"--enable-division" )
+                    if [ -n "$2" ] && [[ "$2" != -* ]]; then
+                        #echo "registering status parameters: enable-division=$2"
+                        local enable_division=$2
+                        shift
+                    else
+                        echo "Error: status parameter incorrect: enable-diivision=$2"
+                    fi
+                ;;
                 ( * )
                     echo "unknown parameter to status bar: $1"
                     local unrecognized_parameters="$1 $unrecognized_parameters"
@@ -571,6 +628,10 @@ function status_bar() {
             echo "unrecognized parameters: $unrecognized_parameters"
         fi
     else
+        local yx_stty=$(stty size)
+        local width_tty=${yx_stty#* }
+        local icon_line1="-"
+        local icon_line2="-"
         local percent="$((($actual_task*100)/$total_tasks))"
         if [ -n "$shift_line_before" ]; then
             if [ "$shift_line_before" == "1" ]; then
@@ -583,8 +644,6 @@ function status_bar() {
             local clear_line=0
         fi
         if [ "$clear_line" == "1" ]; then
-            local yx_stty=$(stty size)
-            local width_tty=${yx_stty#* }
             echo -en "\033[1A"
             echo -en "\r"
             for (( c=1; c<=$width_tty; c++ )); do echo -en " " ; done
@@ -593,8 +652,21 @@ function status_bar() {
             for (( c=1; c<=$width_tty; c++ )); do echo -en " " ; done
             echo -en "\r"
         else
-            progress_bar -percent "$percent" -slb '0' -sla '1' -cl '0'
-            task_bar -tt "$total_tasks" -at "$actual_task" -msg "$task_msg" -sla '0' -slb '0' -cl '0'   
+            if [ -z "$enable_division" ]; then
+                local enable_division=0
+            fi
+            if [ "$enable_division" == "1" ]; then
+                #echo $(for (( c=1; c<=$(stty size | cut -d' ' -f2); c++ )); do echo -en "_" ; done)
+                echo $(for (( c=1; c<=$width_tty; c++ )); do echo -en "$icon_line1" ; done)
+                #echo -en "\n"
+            fi
+            progress_bar -percent "$percent" -slb '0' -sla '1' -cl '0' -ed '0'
+            task_bar -tt "$total_tasks" -at "$actual_task" -msg "$task_msg" -sla '0' -slb '0' -cl '0' -ed '0'
+            if [ "$enable_division" == "1" ]; then
+                echo -en "\n"
+                #echo $(for (( c=1; c<=$(stty size | cut -d' ' -f2); c++ )); do echo -en "-" ; done)
+                echo $(for (( c=1; c<=$width_tty; c++ )); do echo -en "$icon_line2" ; done)
+            fi
         fi
         if [ -n "$shift_line_after" ]; then
             if [ "$shift_line_after" == "1" ]; then
@@ -617,8 +689,9 @@ read_cli_args $command_args ;
 ################################################################################################
 
 credits > $logs_directory/summary.log;
-credits;
+status_bar -tt 1 -at 0 -msg "script started" -sla '0' -slb '0' -cl '0' --ed '1'
 logger -task "script" --priority "info" -msg "=============== script started ===============" --show;
-logger -task "install" --priority "alert" -msg "teste de mensagem" --show;
 
-status_bar -tt 1 -at 0 -msg "script started" -sla '1' -slb '1' -cl '0'
+
+logger -task "script" --priority "info" -msg "=============== script finished ===============" --show;
+status_bar -tt 1 -at 1 -msg "script finished" -sla '0' -slb '0' -cl '0' --ed '1'
