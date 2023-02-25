@@ -92,49 +92,49 @@ function mk_workdir() {
 function mk_zone_file() {
     if [ $dns_type = "master" ]; then
         messenger "Making Zone files"
-        echo ';
-        ; BIND data file for local loopback interface
-        ;
-        $TTL	604800
-        @	IN	SOA'"	dns.$domain. root.$domain. "'(
-                    '"$serial_date"'		; Serial
-                    604800		; Refresh
-                    86400		; Retry
-                    2419200		; Expire
-                    604800 )	; Negative Cache TTL
-        ;'"
-                    IN	NS	ns1.$domain.
-                    IN	NS	ns2.$domain.
+echo ';
+; BIND data file for local loopback interface
+;
+$TTL	604800
+@	IN	SOA'"	dns.$domain. root.$domain. "'(
+            '"$serial_date"'		; Serial
+            604800		; Refresh
+            86400		; Retry
+            2419200		; Expire
+            604800 )	; Negative Cache TTL
+;'"
+            IN	NS	ns1.$domain.
+            IN	NS	ns2.$domain.
 
-        dns			IN	A	$master_dns_ipv4
-        dns			IN	A	$slave_dns_ipv4	
+dns			IN	A	$master_dns_ipv4
+dns			IN	A	$slave_dns_ipv4	
 
-        ns1			IN	A	$master_dns_ipv4
-        ns2			IN	A	$slave_dns_ipv4	
+ns1			IN	A	$master_dns_ipv4
+ns2			IN	A	$slave_dns_ipv4	
 
-        $hostname	IN	A	$first_ipv4_hostname
+$hostname	IN	A	$first_ipv4_hostname
 
-        " > /var/lib/bind/$domain/db/db.$domain
+" > /var/lib/bind/$domain/db/db.$domain
 
-        echo ';
-        ; BIND reverse data file for local loopback interface
-        ;
-        $TTL	604800
-        @	IN	SOA'"	dns.$domain. root.$domain. "'(
-                    '"$serial_date"'		; Serial
-                    604800		; Refresh
-                    86400		; Retry
-                    2419200		; Expire
-                    604800 )	; Negative Cache TTL
-        ;'"
-                    IN	NS	ns1.$domain.
-                    IN	NS	ns2.$domain.
+echo ';
+; BIND reverse data file for local loopback interface
+;
+$TTL	604800
+@	IN	SOA'"	dns.$domain. root.$domain. "'(
+            '"$serial_date"'		; Serial
+            604800		; Refresh
+            86400		; Retry
+            2419200		; Expire
+            604800 )	; Negative Cache TTL
+;'"
+            IN	NS	ns1.$domain.
+            IN	NS	ns2.$domain.
 
-        $end_byte_ipv4_master_dns			IN	PTR ns1.$domain.
-        $end_byte_ipv4_slave_dns			IN	PTR ns2.$domain.
+$end_byte_ipv4_master_dns			IN	PTR ns1.$domain.
+$end_byte_ipv4_slave_dns			IN	PTR ns2.$domain.
 
-        $end_byte_ipv4_hostname	IN	PTR $hostname.$domain.
-        " > /var/lib/bind/$domain/db/db.$firts_three_bytes_reverse_ipv4_hostname
+$end_byte_ipv4_hostname	IN	PTR $hostname.$domain.
+" > /var/lib/bind/$domain/db/db.$firts_three_bytes_reverse_ipv4_hostname
 
         messenger "Implement DNSSEC"
         # Create our initial keys
