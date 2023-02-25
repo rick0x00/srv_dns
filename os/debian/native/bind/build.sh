@@ -160,6 +160,7 @@ function conf_named_conf_options() {
 
     if [ $dns_type = "master" ]; then
         echo 'options {
+            recursion yes;
             directory "/var/cache/bind";
             dnssec-enable yes;
             dnssec-validation auto;
@@ -172,11 +173,12 @@ function conf_named_conf_options() {
                 '"$slave_dns_ipv4"';
             };
             masterfile-format text;
-            version "RR DNS Server";
+            version "DNS Server";
         };
         ' > /etc/bind/named.conf.options
     elif [ $dns_type = "slave" ]; then
         echo 'options {
+            recursion yes;
             directory "/var/cache/bind";
             dnssec-enable yes;
             dnssec-validation auto;
@@ -184,7 +186,7 @@ function conf_named_conf_options() {
             listen-on-v6 { any; };
             allow-transfer { none; };
             masterfile-format text;
-            version "RR DNS Server";
+            version "DNS Server";
         };
         ' > /etc/bind/named.conf.options
     fi
@@ -244,9 +246,9 @@ function conf_named_conf_local() {
 
 function stat_services() {
     messenger "Start Services"
-    systemctl enable --now bind9
-    systemctl restart bind9
-    systemctl status bind9;
+    service named stop
+    service named start
+    service named status
 }
 
 function show_dscodes() {
