@@ -23,19 +23,19 @@ fi
 ################################################################################################
 # start set variables
 
-dnstype="master"
-masterdnsipv4="192.168.0.2"
-slavednsipv4="192.168.0.3"
+dns_type="master"
+master_dns_ipv4="192.168.0.2"
+slave_dns_ipv4="192.168.0.3"
 domain="example.com.br"
 
 hostname=$(hostname)
-hostnameips=$(hostname -I)
-hostnamefisrtipv4=$(echo "$masterdnsipv4" | cut -d" " -f1)
-reversehostnamefisrtipv4=$(echo $hostnamefisrtipv4 | cut -d"." -f3).$(echo $hostnamefisrtipv4 | cut -d"." -f2).$(echo $hostnamefisrtipv4 | cut -d"." -f1)
-endhostnamefisrtipv4=$(echo $hostnamefisrtipv4 | cut -d"." -f4)
-endbyteipv4masterdns=$(echo $masterdnsipv4 | cut -d"." -f4)
-endbyteipv4slavedns=$(echo $slavednsipv4 | cut -d"." -f4)
-serialdate=$(date +'%Y%m%d')
+hostname_ips=$(hostname -I)
+first_ipv4_hostname=$(echo "$master_dns_ipv4" | cut -d" " -f1)
+firts_three_bytes_reverse_ipv4_hostname=$(echo $first_ipv4_hostname | cut -d"." -f3).$(echo $first_ipv4_hostname | cut -d"." -f2).$(echo $first_ipv4_hostname | cut -d"." -f1)
+end_byte_ipv4_hostname=$(echo $first_ipv4_hostname | cut -d"." -f4)
+end_byte_ipv4_master_dns=$(echo $master_dns_ipv4 | cut -d"." -f4)
+end_byte_ipv4_slave_dns=$(echo $slave_dns_ipv4 | cut -d"." -f4)
+serial_date=$(date +'%Y%m%d')
 
 # end set variables
 ################################################################################################
@@ -77,7 +77,7 @@ function configure_etc_hosts() {
     cp /etc/hosts /etc/hosts.bkp_$(date --iso-8601='s')
     echo "" >> /etc/hosts
     echo "# --- START DNS MAPPING ---" >> /etc/hosts
-    echo "$hostnamefisrtipv4 $hostname.$domain" >> /etc/hosts
+    echo "$first_ipv4_hostname $hostname.$domain" >> /etc/hosts
     echo "# --- BEGIN DNS MAPPING ---" >> /etc/hosts
     echo "" >> /etc/hosts
 }
@@ -90,14 +90,14 @@ function mk_workdir() {
 }
 
 function mk_zone_file() {
-    if [ $dnstype = "master" ]; then
+    if [ $dns_type = "master" ]; then
         messenger "Making Zone files"
         echo ';
         ; BIND data file for local loopback interface
         ;
         $TTL	604800
         @	IN	SOA'"	dns.$domain. root.$domain. "'(
-                    '"$serialdate"'		; Serial
+                    '"$serial_date"'		; Serial
                     604800		; Refresh
                     86400		; Retry
                     2419200		; Expire
@@ -106,13 +106,13 @@ function mk_zone_file() {
                     IN	NS	ns1.$domain.
                     IN	NS	ns2.$domain.
 
-        dns			IN	A	$masterdnsipv4
-        dns			IN	A	$slavednsipv4	
+        dns			IN	A	$master_dns_ipv4
+        dns			IN	A	$slave_dns_ipv4	
 
-        ns1			IN	A	$masterdnsipv4
-        ns2			IN	A	$slavednsipv4	
+        ns1			IN	A	$master_dns_ipv4
+        ns2			IN	A	$slave_dns_ipv4	
 
-        $hostname	IN	A	$hostnamefisrtipv4
+        $hostname	IN	A	$first_ipv4_hostname
 
         " > /var/lib/bind/$domain/db/db.$domain
 
@@ -121,7 +121,7 @@ function mk_zone_file() {
         ;
         $TTL	604800
         @	IN	SOA'"	dns.$domain. root.$domain. "'(
-                    '"$serialdate"'		; Serial
+                    '"$serial_date"'		; Serial
                     604800		; Refresh
                     86400		; Retry
                     2419200		; Expire
@@ -130,11 +130,11 @@ function mk_zone_file() {
                     IN	NS	ns1.$domain.
                     IN	NS	ns2.$domain.
 
-        $endbyteipv4masterdns			IN	PTR ns1.$domain.
-        $endbyteipv4slavedns			IN	PTR ns2.$domain.
+        $end_byte_ipv4_master_dns			IN	PTR ns1.$domain.
+        $end_byte_ipv4_slave_dns			IN	PTR ns2.$domain.
 
-        $endhostnamefisrtipv4	IN	PTR $hostname.$domain.
-        " > /var/lib/bind/$domain/db/db.$reversehostnamefisrtipv4
+        $end_byte_ipv4_hostname	IN	PTR $hostname.$domain.
+        " > /var/lib/bind/$domain/db/db.$firts_three_bytes_reverse_ipv4_hostname
 
         messenger "Implement DNSSEC"
         # Create our initial keys
@@ -149,7 +149,7 @@ function mk_zone_file() {
         chgrp bind /var/lib/bind/$domain/keys/*
         chmod g=r,o= /var/lib/bind/$domain/keys/*
         #sudo dnssec-signzone -S -z -o "$domain" "/var/lib/bind/$domain/db/db.$domain"
-        #sudo dnssec-signzone -S -z -o "$domain" "/var/lib/bind/$domain/db/db.$reversehostnamefisrtipv4"
+        #sudo dnssec-signzone -S -z -o "$domain" "/var/lib/bind/$domain/db/db.$firts_three_bytes_reverse_ipv4_hostname"
         #sudo chmod 644 /etc/bind/*.signed
     fi
 }
@@ -158,7 +158,7 @@ function conf_named_conf_options() {
     messenger "configure named.conf.options"
     cp /etc/bind/named.conf.options /etc/bind/named.conf.options.bkp_$(date --iso-8601='s')
 
-    if [ $dnstype = "master" ]; then
+    if [ $dns_type = "master" ]; then
         echo 'options {
             directory "/var/cache/bind";
             dnssec-enable yes;
@@ -166,16 +166,16 @@ function conf_named_conf_options() {
             listen-on { any; };
             listen-on-v6 { any; };
             allow-transfer {
-                '"$slavednsipv4"';
+                '"$slave_dns_ipv4"';
             };
             allow-notify {
-                '"$slavednsipv4"';
+                '"$slave_dns_ipv4"';
             };
             masterfile-format text;
             version "RR DNS Server";
         };
         ' > /etc/bind/named.conf.options
-    elif [ $dnstype = "slave" ]; then
+    elif [ $dns_type = "slave" ]; then
         echo 'options {
             directory "/var/cache/bind";
             dnssec-enable yes;
@@ -195,7 +195,7 @@ function conf_named_conf_local() {
     messenger "Specify Local Zone Files (DBs) directives"
     cp /etc/bind/named.conf.local /etc/bind/named.conf.local.bkp_$(date --iso-8601='s')
 
-    if [ $dnstype = "master" ]; then
+    if [ $dns_type = "master" ]; then
         echo '
         // --- START ORGANIZATION ZONES ---
         // Forward Lookup Zone
@@ -209,9 +209,9 @@ function conf_named_conf_local() {
         };
 
         // Reverse Lookup Zone
-        zone '"$reversehostnamefisrtipv4.in-addr.arpa"' {
+        zone '"$firts_three_bytes_reverse_ipv4_hostname.in-addr.arpa"' {
             type master;
-            file "'"/var/lib/bind/$domain/db/db.$reversehostnamefisrtipv4"'";
+            file "'"/var/lib/bind/$domain/db/db.$firts_three_bytes_reverse_ipv4_hostname"'";
             key-directory "'"/var/lib/bind/$domain/keys/"'";
             auto-dnssec maintain;
             inline-signing yes;
@@ -219,23 +219,23 @@ function conf_named_conf_local() {
         };
         // --- BEGIN ORGANIZATION ZONES ---
         ' > /etc/bind/named.conf.local
-    elif [ $dnstype = "slave" ]; then
+    elif [ $dns_type = "slave" ]; then
         echo '
         // --- START ORGANIZATION ZONES ---
         // Forward Lookup Zone
         zone '"$domain"' {
             type slave;
             file "'"/var/lib/bind/$domain/db/db.$domain.signed"'";
-            masters { '"$masterdnsipv4"'; };
-            allow-notify { '"$masterdnsipv4"'; };
+            masters { '"$master_dns_ipv4"'; };
+            allow-notify { '"$master_dns_ipv4"'; };
         };
 
         // Reverse Lookup Zone
-        zone '"$reversehostnamefisrtipv4.in-addr.arpa"' {
+        zone '"$firts_three_bytes_reverse_ipv4_hostname.in-addr.arpa"' {
             type slave;
-            file "'"/var/lib/bind/$domain/db/db.$reversehostnamefisrtipv4.signed"'";
-            masters { '"$masterdnsipv4"'; };
-            allow-notify { '"$masterdnsipv4"'; };
+            file "'"/var/lib/bind/$domain/db/db.$firts_three_bytes_reverse_ipv4_hostname.signed"'";
+            masters { '"$master_dns_ipv4"'; };
+            allow-notify { '"$master_dns_ipv4"'; };
         };
         // --- BEGIN ORGANIZATION ZONES ---
         ' > /etc/bind/named.conf.local
