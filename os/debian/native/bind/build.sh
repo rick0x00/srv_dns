@@ -41,39 +41,39 @@ serialdate=$(date +'%Y%m%d')
 ################################################################################################
 # start definition functions
 #################################################
+# start complement definitions functions
+
+function messenger() {
+    echo "==================================================="
+    echo " $* "
+    echo "==================================================="
+}
+
+# end complement definitions functions
+#################################################
 # start main definitions functions
 
-# end main definitions functions
-#################################################
-# end definition functions
-################################################################################################
-# start argument reading
-
-# end argument reading
-################################################################################################
-# start main executions of code
-
 function set_good_dns() {
-    echo "Establishing Temporary Good DNS"
+    messenger "Establishing Temporary Good DNS"
     cp /etc/resolv.conf /etc/resolv.conf.bkp_$(date --iso-8601='s')
     echo "nameserver 8.8.8.8" > /etc/resolv.conf
 }
 
 function install_bind() {
-    echo "Install BIND"
+    messenger "Install BIND"
     apt update
     apt install -y bind9 bind9utils bind9-doc dnsutils
 }
 
 function set_localhost_dns() {
-    echo "Establishing Localhost DNS"
+    messenger "Establishing Localhost DNS"
     cp /etc/resolv.conf /etc/resolv.conf.bkp_$(date --iso-8601='s')
     echo "nameserver 127.0.0.1
     search localhost" > /etc/resolv.conf
 }
 
 function configure_etc_hosts() {
-    echo "Configure /etc/hosts"
+    messenger "Configure /etc/hosts"
     cp /etc/hosts /etc/hosts.bkp_$(date --iso-8601='s')
     echo "" >> /etc/hosts
     echo "# --- START DNS MAPPING ---" >> /etc/hosts
@@ -83,7 +83,7 @@ function configure_etc_hosts() {
 }
 
 function mk_workdir() {
-    echo "Making Workdir"
+    messenger "Making Workdir"
     mkdir -p /var/lib/bind/$domain/db /var/lib/bind/$domain/keys
     chown root:bind -R /var/lib/bind/*
     chmod 770 -R /var/lib/bind/*
@@ -91,7 +91,7 @@ function mk_workdir() {
 
 function mk_zone_file() {
     if [ $dnstype = "master" ]; then
-        echo "Making Zone files"
+        messenger "Making Zone files"
         echo ';
         ; BIND data file for local loopback interface
         ;
@@ -136,7 +136,7 @@ function mk_zone_file() {
         $endhostnamefisrtipv4	IN	PTR $hostname.$domain.
         " > /var/lib/bind/$domain/db/db.$reversehostnamefisrtipv4
 
-        echo "Implement DNSSEC"
+        messenger "Implement DNSSEC"
         # Create our initial keys
         cd /var/lib/bind/$domain/keys/
         #sudo dnssec-keygen -a RSASHA256 -b 2048 -f KSK "$domain"
@@ -155,7 +155,7 @@ function mk_zone_file() {
 }
 
 function conf_named_conf_options() {
-    echo "configure named.conf.options"
+    messenger "configure named.conf.options"
     cp /etc/bind/named.conf.options /etc/bind/named.conf.options.bkp_$(date --iso-8601='s')
 
     if [ $dnstype = "master" ]; then
@@ -191,8 +191,8 @@ function conf_named_conf_options() {
 }
 
 function conf_named_conf_local() {
-    echo "Configure /etc/bind/named.conf.local"
-    echo "Specify Local Zone Files (DBs) directives"
+    messenger "Configure /etc/bind/named.conf.local"
+    messenger "Specify Local Zone Files (DBs) directives"
     cp /etc/bind/named.conf.local /etc/bind/named.conf.local.bkp_$(date --iso-8601='s')
 
     if [ $dnstype = "master" ]; then
@@ -243,16 +243,27 @@ function conf_named_conf_local() {
 }
 
 function stat_services() {
-    echo "End Configurations"
+    messenger "Start Services"
     systemctl enable --now bind9
     systemctl restart bind9
     systemctl status bind9;
 }
 
 function show_dscodes() {
-    echo "Show DS code, Keytag and Digest"
+    messenger "Show DS code, Keytag and Digest"
     dig @127.0.0.1 +norecurse "$domain". DNSKEY | dnssec-dsfromkey -f - "$domain"    
 }
+
+# end main definitions functions
+#################################################
+# end definition functions
+################################################################################################
+# start argument reading
+
+# end argument reading
+################################################################################################
+# start main executions of code
+
 
 set_good_dns
 install_bind
