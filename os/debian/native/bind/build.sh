@@ -142,8 +142,8 @@ $end_byte_ipv4_hostname	IN	PTR $hostname.$domain.
         #sudo dnssec-keygen -a RSASHA256 -b 2048 -f KSK "$domain"
         #sudo dnssec-keygen -a RSASHA256 -b 1280 "$domain"
 
-        dnssec-keygen -a NSEC3RSASHA1 -b 2048 -n ZONE $domain
-        dnssec-keygen -f KSK -a NSEC3RSASHA1 -b 4096 -n ZONE $domain
+        dnssec-keygen -a ECDSAP256SHA256 -b 2048 -n ZONE $domain
+        dnssec-keygen -f KSK -a ECDSAP256SHA256 -b 4096 -n ZONE $domain
 
         # Set permissions so group bind can read the keys
         chgrp bind /var/lib/bind/$domain/keys/*
