@@ -1,0 +1,53 @@
+version: '3.9'
+
+
+# ============================================================ #
+# Tool Created date: 05 fev 2023                               #
+# Tool Created by: Henrique Silva (rick.0x00@gmail.com)        #
+# Tool Name: srv_dns                                           #
+# Description: tool for help in the creation of DNS servers    #
+# License: MIT License                                         #
+# Remote repository 1: https://github.com/rick0x00/srv_dns     #
+# Remote repository 2: https://gitlab.com/rick0x00/srv_dns     #
+# ============================================================ #
+
+
+networks:
+  network_dns:
+    driver: macvlan
+    driver_opts:
+      parent: ${HOST_PARENT_NETWORK_INTERFACE}
+    ipam:
+      driver: default
+      config:
+        - subnet: "192.168.0.0/24"
+          ip_range: "192.168.0.0/24"
+#          aux_addresses:
+#            dns_slave: "192.168.0.3"
+        - subnet: "2001:0db8::/32"
+
+volumes:
+  dns_master_var_lib_bind:
+  dns_master_etc_bind:
+
+services:
+  dns_master:
+    container_name: dns_master
+    hostname: dns_master
+    build:
+      context: .
+      args:
+        - dns_type=master
+        - master_dns_ipv4=192.168.0.2
+        - slave_dns_ipv4=192.168.0.2
+        - domain=example.com.br
+    volumes:
+      - dns_master_etc_bind:/etc/bind
+      - dns_master_var_lib_bind:/var/lib/bind
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "953:953/tcp"
+    networks:
+      network_dns:
+        ipv4_address: 192.168.0.2
